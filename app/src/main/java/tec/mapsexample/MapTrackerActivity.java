@@ -25,15 +25,17 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
 
 import java.util.ArrayList;
+import java.util.Timer;
 
 public class MapTrackerActivity extends AppCompatActivity  implements OnMapReadyCallback {
 
     private MapView mapView;
     private GoogleMap mMap;
-    //private static final String MAP_VIEW_BUNDLE_KEY;
+    private LatLng previousLocation;
+
     LocationManager locationManager;
-    //Para detectar cambios de localización del usuario
     LocationListener locationListener;
+    PolylineOptions options = new PolylineOptions();
 
 
     @Override
@@ -58,8 +60,9 @@ public class MapTrackerActivity extends AppCompatActivity  implements OnMapReady
             @Override
             public void onLocationChanged(Location location) {
                 LatLng currentLocation = new LatLng(location.getLatitude(),location.getLongitude());
-                mMap.addMarker(new MarkerOptions().position(currentLocation).title("Aquí Estoy"));
+                //mMap.addMarker(new MarkerOptions().position(currentLocation).title("Aquí Estoy"));
                 mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLocation,16));
+                drawLineTwoPoints(new LatLng(location.getLatitude(),location.getLongitude()));
             }
 
             @Override
@@ -87,7 +90,11 @@ public class MapTrackerActivity extends AppCompatActivity  implements OnMapReady
         else {
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1, 10, locationListener);
         }
+        options.color( Color.parseColor( "#9534eb" ) );
+        options.width( 5 );
+        options.visible( true );
     }
+
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -108,9 +115,11 @@ public class MapTrackerActivity extends AppCompatActivity  implements OnMapReady
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         // Add a marker in Sydney and move the camera
-        LatLng tECB3 = new LatLng(19.856349, -83.912619);
-        mMap.addMarker(new MarkerOptions().position(tECB3).title("Marker in TEC-B3"));
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(tECB3,16));
+        LatLng tECB3 = new LatLng(9.856345, -83.912658);
+        previousLocation = tECB3;
+        options.add(tECB3);
+        //mMap.addMarker(new MarkerOptions().position(tECB3).title("Marker in TEC-B3"));
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(tECB3,18));
     }
 
     @Override
@@ -158,7 +167,7 @@ public class MapTrackerActivity extends AppCompatActivity  implements OnMapReady
         mapView.onLowMemory();
     }
 
-    private void drawPrimaryLinePath( ArrayList<Location> listLocsToDraw )
+    private void drawPrimaryLinePath( ArrayList<LatLng> listLocsToDraw )
     {
         if ( mMap == null )
         {
@@ -169,20 +178,17 @@ public class MapTrackerActivity extends AppCompatActivity  implements OnMapReady
         {
             return;
         }
-
-        PolylineOptions options = new PolylineOptions();
-
-        options.color( Color.parseColor( "#9534eb" ) );
-        options.width( 5 );
-        options.visible( true );
-
-        for ( Location locRecorded : listLocsToDraw )
+        for ( LatLng locRecorded : listLocsToDraw )
         {
-            options.add( new LatLng( locRecorded.getLatitude(),
-                    locRecorded.getLongitude() ) );
+            options.add(locRecorded );
         }
 
         mMap.addPolyline( options );
+    }
 
+    private void drawLineTwoPoints(LatLng endPoint){
+        options.add(endPoint);
+        previousLocation = endPoint;
+        mMap.addPolyline(options);
     }
 }
